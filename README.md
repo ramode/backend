@@ -4,5 +4,9 @@ In developing...
 
 Need Python 3.6
 
-INSTALL:
+Requrements:
 pip install aiohttp
+pip install aiohttp_auth (https://github.com/gnarlychicken/aiohttp_auth)
+pip install Peewee (used Peewee-2.10.1, ??? peewee-async ?? )
+pip install psycopg2
+pip install peewee-async aiopg
