@@ -18,22 +18,19 @@ from aiohttp import web
 # https://github.com/gnarlychicken/aiohttp_auth
 from aiohttp_auth import auth
 
+from os import urandom
+
+
 from models import *
 
 
 async def login_view(request):
-	params = await request.post()
-
-	for q in params:
-		print (q)
-
+	params = await request.json()
 	username = params.get("username", None)
 	password = params.get("password", None)
 
-	print(username)
-	print(password)
-	
 	try:
+		# Вываливает трейсбек, если запись не найдена
 		user_obj = await objects.get(User, name=username, password=password)
 	except:
 		user_obj = None
@@ -59,7 +56,16 @@ def setup_routes(app):
 	app.router.add_static("/", "/var/wwws/billing.eth0.pro/html")
 
 
-app = web.Application()
+# Create a auth ticket mechanism that expires after 1 minute (60
+# seconds), and has a randomly generated secret. Also includes the
+# optional inclusion of the users IP address in the hash
+auth_policy = auth.CookieTktAuthentication(urandom(32), 60, include_ip=True)
+
+middlewares = [
+auth.auth_middleware(auth_policy),
+]
+
+app = web.Application(middlewares=middlewares)
 
 # Прописывем роуты web-сервера:
 setup_routes(app)

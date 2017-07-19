@@ -7,7 +7,7 @@ import asyncio
 import logging
 
 from peewee import *
-from playhouse.shortcuts import RetryOperationalError
+# from playhouse.shortcuts import RetryOperationalError
 
 import peewee_async
 import peewee_asyncext
@@ -30,7 +30,8 @@ db = peewee_asyncext.PostgresqlExtDatabase("run-billing", user="run-billing", pa
 
 # Create async models manager:
 # Sometimes, it’s so easy to forget to pass custom loop instance, but now it’s not a problem! Just initialize with an event loop once.
-objects = peewee_async.Manager(db, loop=loop)
+# objects = peewee_async.Manager(db, loop=loop)
+objects = peewee_async.Manager(db)
 
 # No need for sync anymore!
 # v1 - ?
@@ -38,10 +39,10 @@ objects = peewee_async.Manager(db, loop=loop)
 
 # this will raise AssertionError on ANY sync call
 # v2 - ?
-#objects.database.allow_sync = False
+objects.database.allow_sync = False
 
 # alternatevely we can set ERROR or WARNING loggin level to db.allow_sync:
-objects.database.allow_sync = logging.ERROR
+# objects.database.allow_sync = logging.ERROR
 
 
 
