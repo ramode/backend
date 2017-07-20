@@ -51,10 +51,15 @@ async def acl_group_callback(login):
 	# our example, we allow unauthenticated users access to some things, so
 	# we return an empty tuple.
 	# return group_map.get(user_id, tuple())
-	user_obj = await objects.get(User, login=login)
-	group_obj = await objects.get_related(user_obj, "group")
+	try:
+		user_obj = await objects.get(User, login=login)
+		group_obj = await objects.get_related(user_obj, "group")
+		res = (group_obj.name, )
 
-	return (group_obj.name, )
+	except:
+		res = None
+
+	return res
 
 
 async def check_role(request):
@@ -65,16 +70,11 @@ async def check_role(request):
 
 	groups = await aiohttp_auth.acl.get_user_groups(request)
 
-	print("-----------")
-	print(role)
-	print(groups)
-	print(role in groups)
-	print("-----------")
+	if groups:
+		if role in groups:
+			return web.Response(body='OK'.encode('utf-8'))
 
-	if role in groups:
-		return web.Response(body='OK'.encode('utf-8'))
-
-	raise web.HTTPNotFound()
+	raise web.HTTPNoContent()
 
 
 
