@@ -65,7 +65,6 @@ async def acl_group_callback(login):
 async def check_role(request):
 
 	params = await request.json()
-	print(params)
 	role = params.get("role")
 
 	groups = await aiohttp_auth.acl.get_user_groups(request)
@@ -77,6 +76,33 @@ async def check_role(request):
 	raise web.HTTPNoContent()
 
 
+async def create_subscriber(request):
+
+	params = await request.json()
+	print(params)
+
+	user_id = await aiohttp_auth.auth.get_auth(request)
+	print(user_id)
+
+	user_obj = await objects.get(User, login=user_id)
+	isp = await objects.get_related(user_obj, "isp")
+	print(isp)
+
+	subscriber_obj = await objects.create(Subscriber, name=params["name"], birthdate=params["birthdayDate"], phone=params["phone"], email=params["email"], passport=params["passport"], address=params["address"], isp_id=isp.id)
+
+	# try:
+	# 	subscriber_obj = objects.create(Subscriber, params)
+	# 	return web.Response(body='OK'.encode('utf-8'))
+
+	# except:
+	# 	raise web.HTTPUnprocessableEntity()
+	
+	if subscriber_obj:
+		return web.Response(body='OK'.encode('utf-8'))
+
+	raise web.HTTPUnprocessableEntity()
+
+	
 
 
 
@@ -94,7 +120,7 @@ def setup_routes(app):
 
 	app.router.add_post("/api/v1/login", login_view)
 	app.router.add_post("/api/v1/check_role", check_role)
-	# app.router.add_post("/api/v1/")
+	app.router.add_post("/api/v1/subscribers/new", create_subscriber)
 
 	app.router.add_static("/", "/var/wwws/billing.eth0.pro/html")
 
@@ -102,8 +128,9 @@ def setup_routes(app):
 # Create a auth ticket mechanism that expires after 1 minute (60
 # seconds), and has a randomly generated secret. Also includes the
 # optional inclusion of the users IP address in the hash
+# 1209600 sec - 2 week
 # auth_policy = aiohttp_auth.auth.CookieTktAuthentication(urandom(32), 60, include_ip=True)
-auth_policy = aiohttp_auth.auth.SessionTktAuthentication(urandom(32), 60, include_ip=True)
+auth_policy = aiohttp_auth.auth.SessionTktAuthentication(urandom(32), 1209600, include_ip=True)
 
 middlewares = [
 aiohttp_session.session_middleware(EncryptedCookieStorage(urandom(32))),

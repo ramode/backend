@@ -76,7 +76,7 @@ objects = ExtManager(db)
 
 # this will raise AssertionError on ANY sync call
 # v2 - ?
-# For sync debug in shell: objects.database.set_allow_sync(True)
+# -- For sync debug in shell: objects.database.set_allow_sync(True)
 objects.database.allow_sync = False
 
 # alternatevely we can set ERROR or WARNING loggin level to db.allow_sync:
@@ -93,10 +93,28 @@ class Group(BaseModel):
 	name = CharField()
 
 
+class Isp(BaseModel):
+	name = CharField()
+
+
+# class Service(BaseModel):
+
+		
+
+class Subscriber(BaseModel):
+	name = CharField()
+	birthdate = DateTimeField()
+	phone = CharField()
+	email = CharField()
+	passport = CharField()
+	address = CharField()
+	isp = ForeignKeyField(Isp)
+
+
 class User(BaseModel):
 	login = CharField()
 	password = CharField()
 	register_date = DateField()
 	active = BooleanField()
 	group = ForeignKeyField(Group)
-
+	isp = ForeignKeyField(Isp)
