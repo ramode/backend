@@ -14,6 +14,8 @@ server_port = 8031
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
+import json
+
 import asyncio
 from aiohttp import web
 
@@ -26,6 +28,7 @@ from aiohttp_auth.permissions import Group, Permission
 
 # DB defination:
 from models import *
+from utils import return_as_json
 
 
 async def login_view(request):
@@ -96,14 +99,25 @@ async def create_subscriber(request):
 
 	# except:
 	# 	raise web.HTTPUnprocessableEntity()
-	
+
 	if subscriber_obj:
 		return web.Response(body='OK'.encode('utf-8'))
 
 	raise web.HTTPUnprocessableEntity()
 
 	
+@return_as_json
+async def get_subscribers(request):
 
+	subscriber_objs = await objects.execute(Subscriber.select())
+	
+	res = []
+	for obj in subscriber_objs:
+		# res.append(model_to_dict(obj))
+		res.append(obj.__dict__["_data"])
+
+	# return web.json_response(res)
+	return res
 
 
 
@@ -120,7 +134,9 @@ def setup_routes(app):
 
 	app.router.add_post("/api/v1/login", login_view)
 	app.router.add_post("/api/v1/check_role", check_role)
+	
 	app.router.add_post("/api/v1/subscribers/new", create_subscriber)
+	app.router.add_get("/api/v1/subscribers/list", get_subscribers)
 
 	app.router.add_static("/", "/var/wwws/billing.eth0.pro/html")
 

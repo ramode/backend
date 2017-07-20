@@ -2,6 +2,10 @@
 #
 # https://github.com/coleifer/peewee
 #
+#
+# For sync debug in shell: 
+# objects.database.set_allow_sync(True)
+#
 
 import asyncio
 import logging
@@ -12,6 +16,27 @@ from peewee import *
 
 import peewee_async
 import peewee_asyncext
+
+
+
+# def model_to_dict(model):
+
+# 	import json
+
+# 	res = {}
+
+# 	for key in model.keys():
+
+# 		try:
+# 			res[key] = str( getattr(model, key) )
+
+# 		except:
+# 			res[key] = json.dumps( getattr(model, key) )
+
+# 	return res
+
+
+
 
 # https://github.com/05bit/peewee-async/issues/15
 class ExtManager(peewee_async.Manager):
