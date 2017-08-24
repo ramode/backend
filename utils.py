@@ -28,7 +28,7 @@ def return_as_json(handler):
 				date_to_isoformat(item)
 
 		else:
-			date_to_isoformat(item)
+			date_to_isoformat(res)
 
 		return web.json_response(res)
 

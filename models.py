@@ -36,47 +36,47 @@ import peewee_asyncext
 # 	return res
 
 
-
+	
 
 # https://github.com/05bit/peewee-async/issues/15
 class ExtManager(peewee_async.Manager):
-    async def get_related(self, instance, related_name, single_backref=False):
-        """
-        return related instance for foreign key relationship
-        return query for backref or return related instance if single_backref is True
-        """
-        model_cls = type(instance)
-        related_field = getattr(model_cls, related_name)
+	async def get_related(self, instance, related_name, single_backref=False):
+		"""
+		return related instance for foreign key relationship
+		return query for backref or return related instance if single_backref is True
+		"""
+		model_cls = type(instance)
+		related_field = getattr(model_cls, related_name)
 
-        if isinstance(related_field, peewee.ReverseRelationDescriptor):
-            return await self._get_backrefs(instance, related_name, single_backref)
-        else:
-            return await self._get_foreign_key_target(instance, related_name)
+		if isinstance(related_field, peewee.ReverseRelationDescriptor):
+			return await self._get_backrefs(instance, related_name, single_backref)
+		else:
+			return await self._get_foreign_key_target(instance, related_name)
 
-    async def _get_foreign_key_target(self, instance, field_name):
-        foreign_key_value = getattr(instance, field_name + "_id")
+	async def _get_foreign_key_target(self, instance, field_name):
+		foreign_key_value = getattr(instance, field_name + "_id")
 
-        model_cls = type(instance)
-        foreign_key_field = getattr(model_cls, field_name)
-        target_cls = foreign_key_field.rel_model
-        target_field = foreign_key_field.to_field
+		model_cls = type(instance)
+		foreign_key_field = getattr(model_cls, field_name)
+		target_cls = foreign_key_field.rel_model
+		target_field = foreign_key_field.to_field
 
-        return await self.get(target_cls, target_field == foreign_key_value)
+		return await self.get(target_cls, target_field == foreign_key_value)
 
-    async def _get_backrefs(self, instance, related_name, single_backref=False):
-        query = getattr(instance, related_name)
-        instances = await self.execute(query)
+	async def _get_backrefs(self, instance, related_name, single_backref=False):
+		query = getattr(instance, related_name)
+		instances = await self.execute(query)
 
-        if single_backref:
-            for instance in instances:
-                return instance
-            raise query.model_class.DoesNotExist
-        else:
-            return instances
+		if single_backref:
+			for instance in instances:
+				return instance
+			raise query.model_class.DoesNotExist
+		else:
+			return instances
 
 # custom loop!
 # once objects is created with specified loop, all database connections automatically will be set up on that loop.
-loop = asyncio.new_event_loop() 
+loop = asyncio.new_event_loop()
 
 
 # class PostgresqlReconnectDb(RetryOperationalError, PostgresqlExtDatabase):
@@ -118,28 +118,20 @@ class Group(BaseModel):
 	name = CharField()
 
 
-class Isp(BaseModel):
-	name = CharField()
-
-
-# class Service(BaseModel):
-
-		
-
-class Subscriber(BaseModel):
+class Contract(BaseModel):
 	name = CharField()
 	birthdate = DateTimeField()
+	address = CharField()
+	passport = CharField()
 	phone = CharField()
 	email = CharField()
-	passport = CharField()
-	address = CharField()
-	isp = ForeignKeyField(Isp)
-
+	contractor = ForeignKeyField("self")
+	date = DateField()
+		
 
 class User(BaseModel):
-	login = CharField()
+	login = CharField(unique=True)
 	password = CharField()
-	register_date = DateField()
 	active = BooleanField()
 	group = ForeignKeyField(Group)
-	isp = ForeignKeyField(Isp)
+	contract = ForeignKeyField(Contract)
