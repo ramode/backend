@@ -17,6 +17,10 @@ from peewee import *
 import peewee_async
 import peewee_asyncext
 
+# http://docs.peewee-orm.com/en/latest/peewee/querying.html#implementing-many-to-many
+from playhouse.fields import ManyToManyField
+
+
 
 
 # def model_to_dict(model):
@@ -76,7 +80,7 @@ class ExtManager(peewee_async.Manager):
 
 # custom loop!
 # once objects is created with specified loop, all database connections automatically will be set up on that loop.
-loop = asyncio.new_event_loop()
+loop_db = asyncio.new_event_loop()
 
 
 # class PostgresqlReconnectDb(RetryOperationalError, PostgresqlExtDatabase):
@@ -94,6 +98,7 @@ db = peewee_asyncext.PostgresqlExtDatabase("run-billing", user="run-billing", pa
 # objects = peewee_async.Manager(db, loop=loop)
 # objects = peewee_async.Manager(db)
 objects = ExtManager(db)
+# objects = ExtManager(db, loop=loop_db)
 
 # No need for sync anymore!
 # v1 - ?
@@ -102,20 +107,19 @@ objects = ExtManager(db)
 # this will raise AssertionError on ANY sync call
 # v2 - ?
 # -- For sync debug in shell: objects.database.set_allow_sync(True)
-objects.database.allow_sync = False
+# objects.database.allow_sync = False
+
+# TODO: Return to FALSE, check for blocking loop!!!!!
+# objects.database.allow_sync = True
 
 # alternatevely we can set ERROR or WARNING loggin level to db.allow_sync:
-# objects.database.allow_sync = logging.ERROR
+objects.database.allow_sync = logging.ERROR
 
 
 
 class BaseModel(Model):
 	class Meta:
 		database = db
-
-
-class Group(BaseModel):
-	name = CharField()
 
 
 class Contract(BaseModel):
@@ -127,11 +131,27 @@ class Contract(BaseModel):
 	email = CharField()
 	contractor = ForeignKeyField("self")
 	date = DateField()
-		
+
+
 
 class User(BaseModel):
 	login = CharField(unique=True)
 	password = CharField()
 	active = BooleanField()
-	group = ForeignKeyField(Group)
+	# group = ForeignKeyField(Group)
 	contract = ForeignKeyField(Contract)
+
+class Group(BaseModel):
+	name = CharField(unique=True)
+	users = ManyToManyField(User, related_name="groups")
+
+
+UserGroup = Group.users.get_through_model()
+
+
+# class UserGroup(BaseModel):
+# 	"""
+# 	http://docs.peewee-orm.com/en/latest/peewee/querying.html#implementing-many-to-many
+# 	"""
+# 	user = ForeignKeyField(User)
+# 	group = ForeignKeyField(Group)
